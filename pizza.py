@@ -23,17 +23,20 @@ class Oven:
         self.clock = clock
 
     def retrieve(self):
-        assert(self.cooking is not None)
+        finished = None
+        if self.cooking:
+            self.clock.time = self.finishing_at
 
-        self.clock.time = self.finishing_at
-
-        finished = BakedPizza(self.cooking.num,
-                              self.cooking.placed_at,
-                              self.finishing_at - self.cooking.placed_at)
+            finished = BakedPizza(self.cooking.num,
+                                  self.finishing_at,
+                                  self.finishing_at - self.cooking.placed_at)
         self.cooking = None
+
+        return finished
 
     def submit(self, pizza):
         self.cooking = pizza
+        self.clock.time = max(self.clock.time, pizza.placed_at)
         self.finishing_at = self.clock.time + pizza.bake_time
 
     def bake(self, pizza):
@@ -54,6 +57,13 @@ class Ovens:
         if finished is not None:
             self.baked_pizzas.append(finished)
 
+    def flush(self):
+        next_pizza = True
+        for oven in sorted(self.ovens, key=attrgetter("finishing_at")):
+            self.baked_pizzas.append(oven.retrieve())
+
+        return self.baked_pizzas
+
 UnbakedPizza = namedtuple("Pizza", ["placed_at", "num", "bake_time"])
 BakedPizza = namedtuple("BakedPizza", ["num", "placed_at", "finished_at"])
 
@@ -63,7 +73,7 @@ list of Pizza objects.'''
 
     reader = csv.reader(infile)
 
-    pizzas = [Pizza(placed_at, num, BAKE_TIMES[ty])
+    pizzas = [UnbakedPizza(int(placed_at), int(num), BAKE_TIMES[ty])
               for placed_at, num, ty in reader]
 
     return pizzas
@@ -74,12 +84,13 @@ write them out to the result file.'''
 
     writer = csv.writer(outfile)
     clock = Clock()
-    ovens = Ovens(Oven(clock) for _ in range(OVEN_COUNT))
+    ovens = Ovens([Oven(clock) for _ in range(OVEN_COUNT)])
 
     for pizza in pizzas:
         ovens.bake(pizza)
 
-    writer.writerows(ovens.flush())
+    ps = [list(map(str, pizza)) for pizza in ovens.flush() if pizza]
+    writer.writerows(ps)
 
 
 def main(infile, outfile):

@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from pizza import Clock, DeepDishPizza, ThinCrustPizza, parse, write
+from pizza import Clock, UnbakedPizza, parse, write
 
 @unittest.skip
 class TestClock(unittest.TestCase):
@@ -76,10 +76,10 @@ class TestIO(unittest.TestCase):
     def setUp(self):
         clock = Clock()
         self.pizzas = [
-            DeepDishPizza(0, 1),
-            ThinCrustPizza(0, 2),
-            ThinCrustPizza(10, 3),
-            DeepDishPizza(15, 4)
+            UnbakedPizza(0, 1, 60),
+            UnbakedPizza(0, 2, 15),
+            UnbakedPizza(10, 3, 15),
+            UnbakedPizza(15, 4, 60)
         ]
 
     def test_parse(self):
