@@ -1,5 +1,4 @@
 import csv
-import abc
 
 from sys import argv
 from operator import attrgetter
@@ -58,7 +57,6 @@ class Ovens:
             self.baked_pizzas.append(finished)
 
     def flush(self):
-        next_pizza = True
         for oven in sorted(self.ovens, key=attrgetter("finishing_at")):
             self.baked_pizzas.append(oven.retrieve())
 
@@ -89,8 +87,7 @@ write them out to the result file.'''
     for pizza in pizzas:
         ovens.bake(pizza)
 
-    ps = [list(map(str, pizza)) for pizza in ovens.flush() if pizza]
-    writer.writerows(ps)
+    writer.writerows(list(map(str, pizza)) for pizza in ovens.flush() if pizza)
 
 
 def main(infile, outfile):
